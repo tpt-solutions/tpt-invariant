@@ -1,0 +1,128 @@
+tpt-invariant Design Specification (v2.0)
+Project Name: tpt-invariant
+License: MIT OR Apache-2.0
+Maintainer: TPT Solutions
+Core Backend Dependency: tpt-solver (Evolving into a native "Rust Z3")
+1. Vision & Philosophy
+tpt-invariant is a lightweight, zero-FFI, native Rust formal verifier. It is designed to be the "ripgrep" of the verification ecosystem: blazing fast, trivial to install via cargo install, and deeply integrated into the Rust workflow.
+The Rust Advantage: Unlike C/C++ verifiers (like Kani/CBMC), tpt-invariant does not verify memory safety, data races, or thread safety. Rust’s borrow checker and type system already guarantee these. tpt-invariant exclusively verifies logical correctness (arithmetic, bounds, state transitions, and user-defined contracts). This shrinks the verification state space by orders of magnitude.
+The "Gated Unbounded" Philosophy: We reject the binary choice between "fast but incomplete" (Bounded) and "slow but complete" (Unbounded). tpt-invariant uses a 3-tier gating system to provide unbounded proofs when possible, and gracefully degrades to bounded proofs when math gets too complex, ensuring the tool never hangs.
+2. The Backend: The "Rust Z3" (tpt-solver)
+tpt-invariant relies entirely on tpt-solver. To support this tool, tpt-solver will evolve from a pure QF_LRA engine into a full DPLL(T) SMT Solver tailored specifically for Rust's discrete math.
+tpt-invariant requires tpt-solver to provide:
+CDCL SAT Engine: To resolve the boolean skeleton of Rust's control flow (&&, ||, !).
+QF_LIA (Linear Integer Arithmetic): To handle exact integer bounds (i32, usize) without the false positives of real-number rounding.
+QF_BV (Bitvectors): To perfectly model Rust's exact 32-bit/64-bit integer overflow, wrapping, and bitwise operations.
+Note: tpt-invariant is completely agnostic to how tpt-solver implements these internally, as long as it accepts constraints and returns SAT/UNSAT with counterexamples.
+3. Architecture: The 4-Stage Pipeline
+Stage 1: Contract Ingestion (Frontend)
+Users write contracts using procedural macros. This avoids custom syntax parsing and integrates natively with cargo.
+
+use tpt_invariant::contracts;
+
+#[requires(x > 0 && y > 0)]
+#[ensures(result >= x && result >= y)]
+fn max(x: i32, y: i32) -> i32 {
+    if x > y { x } else { y }
+}
+
+Implementation: The tpt-invariant-macros crate parses these strings into an internal AST at compile time.
+Stage 2: IR Extraction & CFG Generation
+To maintain fast compile times and avoid nightly rustc_driver dependencies for the MVP:
+AST/CFG Extraction: Uses the syn crate to parse the function body and build a simplified Control Flow Graph (CFG).
+Desugaring: Converts Rust constructs (match, for, while) into a simplified, SSA-like (Static Single Assignment) intermediate representation.
+(Note: V2 will transition to parsing Rust MIR directly for 100% fidelity, but AST/CFG is the pragmatic solo-maintainer MVP path).
+Stage 3: Symbolic Execution & The "Gate"
+The engine walks the CFG, replacing concrete variables with Symbolic Expressions. It accumulates Path Conditions (the boolean logic required to reach a specific point). When it hits an assert!, an array index, or an ensures block, it generates a Verification Condition (VC).
+The 3-Tier Gated Unbounded Engine:
+Instead of blindly unrolling loops or hanging on complex math, the engine applies the Gate:
+Tier 1: Bounded Baseline (Fast Path). Unrolls loops up to a small 
+k
+k (e.g., 
+k
+=
+10
+k=10). If it finds a bug, it returns immediately. If it passes, it moves to Tier 2.
+Tier 2: k-Induction Gate (The Math Gate). Attempts to prove the loop is unbounded using k-induction (Base Case + Inductive Step). It passes the inductive step to tpt-solver with a strict timeout and complexity gate (e.g., 2 seconds).
+If tpt-solver proves it: Unbounded Proof Achieved.
+If tpt-solver times out: The Gate Trips.
+Tier 3: Graceful Fallback. If the gate trips, the tool does not crash. It reports: "Passed bounded verification up to 
+k
+=
+10
+k=10. Unbounded proof timed out. Code verified for up to 10 iterations."
+Stage 4: Solving & Reporting
+The VC and Path Conditions are translated into tpt-solver constraints.
+To prove correctness, tpt-invariant asks tpt-solver: "Is there any assignment where Path Conditions are TRUE, but the VC is FALSE?"
+If UNSAT: Code is proven correct.
+If SAT: tpt-solver returns a Counterexample (e.g., "Fails when x = -5"), which tpt-invariant formats into actionable terminal output.
+4. Crate Specifications & Workspace Structure
+tpt-invariant is a Cargo Workspace containing three distinct crates to keep compile times fast and dependencies clean.
+
+tpt-invariant/
+├── Cargo.toml                 # Workspace root
+├── crates/
+│   ├── tpt-invariant-macros/  # Proc-macros (#[requires], #[ensures])
+│   │   ├── Cargo.toml
+│   │   └── src/lib.rs
+│   ├── tpt-invariant-core/    # The engine (CFG, Symbolic Exec, The Gate)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── cfg.rs         # Control Flow Graph generation
+│   │       ├── symbolic.rs    # Symbolic execution & k-induction gate
+│   │       └── solver.rs      # tpt-solver integration
+│   └── tpt-invariant-cli/     # The binary (`cargo invariant`)
+│       ├── Cargo.toml
+│       └── src/main.rs
+
+Dependency Graph
+tpt-invariant-macros -> syn, quote, proc-macro2 (Zero heavy deps).
+tpt-invariant-core -> tpt-invariant-macros, tpt-solver, syn (The heavy lifting).
+tpt-invariant-cli -> tpt-invariant-core, clap, anyhow (The user interface).
+5. CLI Interface
+The user interacts with the tool via standard cargo commands. The "Gate" is exposed via simple flags.
+
+# Default behavior: Bounded up to 50. Fast, incomplete.
+cargo invariant check 
+
+# Gated Unbounded: Tries bounded, then attempts k-induction with a 2s timeout gate.
+cargo invariant check --prove 
+
+# Strict Mode: If the unbounded gate trips, fail the CI pipeline.
+cargo invariant check --prove --strict
+
+# Custom Bound: Override the default bounded limit.
+cargo invariant check --bound 100
+
+6. Scope & Boundaries (What it DOES NOT do)
+To remain viable for a solo maintainer and keep the tool lightweight, tpt-invariant explicitly does not handle:
+Memory Safety / UB: Handled by the Rust compiler.
+Concurrency / Thread Safety: Handled by the Rust compiler and tools like Loom.
+Non-Linear Arithmetic: (e.g., x * y < 10 where both are variables). Handled by bounding or falling back to Tier 3.
+External FFI / System Calls: Treated as uninterpreted functions (black boxes) that return arbitrary valid values.
+7. Why This Replaces the Incumbents
+Feature
+Kani
+Creusot / Prusti
+tpt-invariant
+Backend
+CBMC (C++)
+Z3 (C++) / Why3
+tpt-solver (Pure Rust)
+Install Size
+~500MB+
+~500MB+ (Z3 binary)
+~10MB (Cargo binary)
+Compile Time
+Slow (FFI overhead)
+Slow (Translation overhead)
+Blazing Fast
+Loop Handling
+Bounded only
+Unbounded (Hangs on complex)
+Gated Unbounded (Fast & Safe)
+Rust Native?
+No (Translates to GOTO)
+No (Translates to Viper/Why3)
+Yes (Walks Rust AST/MIR)

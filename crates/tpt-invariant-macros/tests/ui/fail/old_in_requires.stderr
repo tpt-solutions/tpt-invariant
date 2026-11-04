@@ -1,0 +1,5 @@
+error: `old(..)` is only available in `ensures`, not in #[requires]
+ --> tests/ui/fail/old_in_requires.rs:3:12
+  |
+3 | #[requires(old(x) > 0)]
+  |            ^^^^^^

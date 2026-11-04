@@ -1,0 +1,5 @@
+error: contract attributes can only be applied to a function
+ --> tests/ui/fail/contract_on_struct.rs:4:1
+  |
+4 | struct Point {
+  | ^^^^^^

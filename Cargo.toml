@@ -1,0 +1,46 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/tpt-invariant",
+    "crates/tpt-invariant-macros",
+    "crates/tpt-invariant-core",
+    "crates/tpt-invariant-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+# MSRV decision: 1.85 (first stable release with edition 2024). Enforced in CI.
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+authors = ["TPT Solutions"]
+repository = "https://github.com/OWNER/tpt-invariant"
+homepage = "https://github.com/OWNER/tpt-invariant"
+readme = "README.md"
+
+[workspace.dependencies]
+tpt-invariant = { path = "crates/tpt-invariant", version = "0.1.0" }
+tpt-invariant-macros = { path = "crates/tpt-invariant-macros", version = "0.1.0" }
+tpt-invariant-core = { path = "crates/tpt-invariant-core", version = "0.1.0" }
+syn = { version = "2", default-features = false, features = ["full", "parsing", "printing", "clone-impls", "proc-macro"] }
+quote = "1"
+proc-macro2 = "1"
+trybuild = "1"
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Contract-grammar code routinely matches on large syn enums.
+large_enum_variant = "allow"
+module_name_repetitions = "allow"
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 1

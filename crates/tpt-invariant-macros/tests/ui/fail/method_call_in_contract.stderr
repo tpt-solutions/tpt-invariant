@@ -1,0 +1,5 @@
+error: unsupported expression in #[requires] (allowed: literals, variables, arithmetic, comparison, logical and bitwise operators, `result`, `old(..)`)
+ --> tests/ui/fail/method_call_in_contract.rs:3:12
+  |
+3 | #[requires(x.abs() > 0)]
+  |            ^^^^^^^

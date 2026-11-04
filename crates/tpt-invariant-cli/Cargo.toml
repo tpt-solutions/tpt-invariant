@@ -1,0 +1,25 @@
+[package]
+name = "tpt-invariant-cli"
+description = "cargo-invariant: run tpt-invariant verification from cargo (`cargo invariant check`)"
+keywords = ["verification", "cargo", "formal", "contracts"]
+categories = ["development-tools", "command-line-utilities"]
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "../../README.md"
+
+[[bin]]
+name = "cargo-invariant"
+path = "src/main.rs"
+
+[dependencies]
+tpt-invariant-core.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,19 @@
+[package]
+name = "tpt-invariant-core"
+description = "Verification engine for tpt-invariant: IR, symbolic execution, solver gate"
+keywords = ["verification", "symbolic-execution", "smt", "formal"]
+categories = ["development-tools"]
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "../../README.md"
+
+# Dependencies (tpt-invariant-macros, syn, tpt-solver) are added as the
+# corresponding phases land. tpt-solver is not yet pinned; see todo.md Phase 7.
+
+[lints]
+workspace = true

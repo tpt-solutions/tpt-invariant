@@ -1,0 +1,33 @@
+# cargo-deny configuration.
+#
+# Policy (see todo.md, "Locked decisions"): dependencies must NOT be
+# Apache-2.0-only. Apache-2.0 is therefore absent from the allow-list; crates
+# licensed "MIT OR Apache-2.0" pass because the MIT arm satisfies the expression.
+
+[graph]
+all-features = true
+
+[advisories]
+ignore = []
+
+[licenses]
+allow = [
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unlicense",
+    # Required by unicode-ident (a transitive dependency of proc-macro2 / syn).
+    # Permissive and not Apache-only.
+    "Unicode-3.0",
+]
+confidence-threshold = 0.93
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

@@ -1,0 +1,5 @@
+error: `result` is only available in `ensures`, not in #[requires]
+ --> tests/ui/fail/result_in_requires.rs:3:12
+  |
+3 | #[requires(result > 0)]
+  |            ^^^^^^
