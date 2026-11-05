@@ -7,8 +7,10 @@
 //! 3. Symbolic execution and VC generation: [`symbolic`].
 //! 4. Solver integration: [`solver`].
 //!
-//! Only the module skeletons exist yet. Each module documents what remains.
+//! Done so far: the CFG IR and `syn` lowering for the MVP subset ([`lower`]).
+//! [`symbolic`] and [`solver`] are still skeletons; each documents what remains.
 
 pub mod cfg;
+pub mod lower;
 pub mod solver;
 pub mod symbolic;

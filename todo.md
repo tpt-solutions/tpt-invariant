@@ -86,21 +86,21 @@ Maintainer: Phillip / TPT Solutions · License: MIT OR Apache-2.0 · Spec: `spec
 - [x] trybuild tests for error messages; unit tests for parsing
 
 ## Phase 5 — Core: IR extraction & CFG (`cfg.rs`)
-- [ ] Define IR types: blocks, statements, terminators, expressions, types (ints, bool)
-- [ ] Locate verifiable functions in a source file / crate with syn (find fns carrying contracts)
+- [x] Define IR types: blocks, statements, terminators, expressions, types (ints, bool)
+- [x] Locate verifiable functions in a source file / crate with syn (find fns carrying contracts) (free fns, incl. inline `mod`; `impl` methods pending)
 - [ ] Walk crate sources (`src/**`, module tree) from the CLI
 - [ ] Lower expressions: literals, vars, unary/binary ops, casts, method calls (`wrapping_*`, `checked_*`, `abs`, `min`, `max`)
-- [ ] Lower `let` bindings, assignment, compound assignment
-- [ ] Lower `if` / `else`, `if let` (rejected or limited, with clear diagnostic)
-- [ ] Lower `while` loops
-- [ ] Lower `for` over integer ranges (`a..b`, `a..=b`)
+- [x] Lower `let` bindings, assignment, compound assignment
+- [x] Lower `if` / `else`, `if let` (rejected or limited, with clear diagnostic)
+- [x] Lower `while` loops
+- [x] Lower `for` over integer ranges (`a..b`, `a..=b`)
 - [ ] Lower `loop` / `break` / `continue` / `return` / early `?`-less returns
 - [ ] Lower `match` on integers/bools into branch chains
 - [ ] Lower `assert!`, `assert_eq!`, `assert_ne!`, `debug_assert!`, `unreachable!`, `panic!`
 - [ ] SSA conversion (phi nodes / versioned variables)
 - [ ] Function-call handling: contract-based abstraction + optional inlining
-- [ ] Unsupported-construct detection with clear "not supported in MVP" diagnostics
-- [ ] CFG unit tests + DOT dump for debugging
+- [x] Unsupported-construct detection with clear "not supported in MVP" diagnostics
+- [x] CFG unit tests + DOT dump for debugging
 
 ## Phase 6 — Core: symbolic execution & VC generation (`symbolic.rs`)
 - [ ] Symbolic expression type and typed symbolic store

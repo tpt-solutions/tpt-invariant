@@ -12,8 +12,11 @@ repository.workspace = true
 homepage.workspace = true
 readme = "../../README.md"
 
-# Dependencies (tpt-invariant-macros, syn, tpt-solver) are added as the
-# corresponding phases land. tpt-solver is not yet pinned; see todo.md Phase 7.
+# tpt-solver is not yet pinned; see todo.md Phase 7.
+
+[dependencies]
+quote.workspace = true
+syn.workspace = true
 
 [lints]
 workspace = true

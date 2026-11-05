@@ -9,6 +9,9 @@ versions may contain breaking changes.
 ## [Unreleased]
 
 ### Added
+- CFG IR (`tpt-invariant-core::cfg`) and `syn` lowering of free functions for the
+  MVP subset (`tpt-invariant-core::lower`), with a DOT dump and span-accurate
+  "not supported in the MVP subset" errors.
 - Workspace with four crates: `tpt-invariant` (facade), `tpt-invariant-macros`,
   `tpt-invariant-core` (skeleton), and `tpt-invariant-cli` (`cargo-invariant`).
 - Contract macros `#[requires]`, `#[ensures]` and `invariant!`, with a syntactic

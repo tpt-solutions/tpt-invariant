@@ -332,6 +332,10 @@ dependencies = [
 [[package]]
 name = "tpt-invariant-core"
 version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn 2.0.119",
+]
 
 [[package]]
 name = "tpt-invariant-macros"
